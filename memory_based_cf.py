@@ -6,6 +6,7 @@ movies = pd.read_csv('data/movies.csv')
 ratings = pd.read_csv('data/ratings.csv')
 
 movies['title'] = movies['title'].apply(lambda x: ' '.join(x.split(' ')[:-1]))
+movies['title'] = movies['title'].str.upper()
 # duplicate movie titles
 duplicate_movies = movies.groupby('title').filter(lambda x: len(x) >= 2)
 duplicate_movies = duplicate_movies[['movieId', 'title']]
@@ -29,35 +30,32 @@ ratings = ratings.loc[~ratings['movieId'].isin(low_ids)]
 df = pd.merge(ratings, movies, on='movieId')
 pivot_df = pd.pivot_table(df, index='title', columns=[
                           'userId'], values='rating')
-movie = 'Toy Story'
+
+
+def memory_cf(pivot_df, subject):
+    pivot_df = pivot_df.fillna(0)
+    sparse_pivot = sparse.csr_matrix(pivot_df)
+    recommender = cosine_similarity(sparse_pivot)
+    recommender_df = pd.DataFrame(
+        recommender, columns=pivot_df.index, index=pivot_df.index)
+    cosine_df = pd.DataFrame(
+        recommender_df[subject].sort_values(ascending=False))[1:6]
+    cosine_df.reset_index(inplace=True)
+    return cosine_df
 
 
 # Item based CF
-def item_based_cf(pivot_df, movie):
-    pivot_df = pivot_df.fillna(0)
-    sparse_pivot = sparse.csr_matrix(pivot_df)
-    recommender = cosine_similarity(sparse_pivot)
-    recommender_df = pd.DataFrame(
-        recommender, columns=pivot_df.index, index=pivot_df.index)
-    # print(recommender_df.index.str.upper().tolist())
-    cosine_df = pd.DataFrame(
-        recommender_df[movie].sort_values(ascending=False))[1:6]
-    cosine_df.reset_index(inplace=True)
-    print(cosine_df['title'].values.tolist())
-
+movie = 'Toy Story'
+if movie.upper() not in movies['title'].values.tolist():
+    print("Mentioned movie is not in our database")
+else:
+    item_based_cf = memory_cf(pivot_df, movie.upper())
+    print(item_based_cf['title'].values.tolist())
 
 # User based CF
-def user_based_cf(pivot_df, userid):
-    pivot_df = pivot_df.fillna(0)
-    sparse_pivot = sparse.csr_matrix(pivot_df)
-    recommender = cosine_similarity(sparse_pivot)
-    recommender_df = pd.DataFrame(
-        recommender, columns=pivot_df.index, index=pivot_df.index)
-    cosine_df = pd.DataFrame(
-        recommender_df[userid].sort_values(ascending=False))[1:6]
-    cosine_df.reset_index(inplace=True)
-    print(cosine_df['userId'].values.tolist())
-
-
-# item_based_cf(pivot_df, movie)
-user_based_cf(pivot_df.T, 1)
+user = 1
+if user not in ratings['userId'].values.tolist():
+    print("Mentioned userid is not in our database")
+else:
+    user_based_cf = memory_cf(pivot_df.T, user)
+    print(user_based_cf['userId'].values.tolist())
