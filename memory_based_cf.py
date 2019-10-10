@@ -44,20 +44,23 @@ def memory_cf(pivot_df, subject):
     return cosine_df
 
 
-# Item based CF
+user_id = 1
 movie_title = 'Toy Story'
-if movie_title.upper() not in movies['title'].values.tolist():
-    print("Mentioned movie is not in our database")
-else:
-    item_based_cf = memory_cf(pivot_df, movie_title.upper())
-    print("Films you might enjoy based that you watched {0}".format(movie_title))
-    for movie in item_based_cf['title'].values.tolist():
-        print(movie)
-
-# User based CF
-user = 1
-if user not in ratings['userId'].values.tolist():
+if user_id not in ratings['userId'].values.tolist():
     print("Mentioned userid is not in our database")
 else:
-    user_based_cf = memory_cf(pivot_df.T, user)
+
+    if movie_title.upper() not in movies['title'].values.tolist():
+        print("Mentioned movie is not in our database")
+    else:
+        already_watched = df[df['userId'] == user_id]['title'].values.tolist()
+        # Item based CF
+        item_based_cf = memory_cf(pivot_df, movie_title.upper())
+        print("Films you might enjoy based that you watched {0}".format(movie_title))
+        for movie in item_based_cf['title'].values.tolist():
+            if movie not in already_watched:
+                print(movie)
+
+    # User based CF
+    user_based_cf = memory_cf(pivot_df.T, user_id)
     print(user_based_cf['userId'].values.tolist())
