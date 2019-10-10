@@ -30,7 +30,7 @@ pivot_df = pd.pivot_table(df, index='title', columns=['userId'], values='rating'
 movie = 'Toy Story'
 
 
-# Item based
+# Item based CF
 def item_based_cf(pivot_df, movie):
     pivot_df = pivot_df.fillna(0)
     sparse_pivot = sparse.csr_matrix(pivot_df)
@@ -42,7 +42,7 @@ def item_based_cf(pivot_df, movie):
     print(cosine_df['title'].values.tolist())
 
 
-# User based
+# User based CF
 def user_based_cf(pivot_df, userid):
     pivot_df = pivot_df.fillna(0)
     sparse_pivot = sparse.csr_matrix(pivot_df)
@@ -53,5 +53,5 @@ def user_based_cf(pivot_df, userid):
     print(cosine_df['userId'].values.tolist())
 
 
-item_based_cf(pivot_df, movie)
+# item_based_cf(pivot_df, movie)
 user_based_cf(pivot_df.T, 1)
