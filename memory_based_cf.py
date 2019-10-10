@@ -42,4 +42,16 @@ def item_based_cf(pivot_df, movie):
     print(cosine_df['title'].values.tolist())
 
 
+# User based
+def user_based_cf(pivot_df, userid):
+    pivot_df = pivot_df.fillna(0)
+    sparse_pivot = sparse.csr_matrix(pivot_df)
+    recommender = cosine_similarity(sparse_pivot)
+    recommender_df = pd.DataFrame(recommender, columns=pivot_df.index, index=pivot_df.index)
+    cosine_df = pd.DataFrame(recommender_df[userid].sort_values(ascending=False))[1:6]
+    cosine_df.reset_index(inplace=True)
+    print(cosine_df['userId'].values.tolist())
+
+
 item_based_cf(pivot_df, movie)
+user_based_cf(pivot_df.T, 1)
