@@ -1,47 +1,45 @@
-# Memory-based models are based on similarity between items or users using cosine-similarity.
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
+from scipy import sparse
 from sklearn.metrics.pairwise import cosine_similarity
 
-columns = ['user_id', 'item_id', 'rating', 'timestamp']
-df = pd.read_csv('data/u.data', sep='\t', names=columns)
-titles_df = pd.read_csv('data/Movie_Id_Titles')
-df = pd.merge(df, titles_df, on='item_id')
+movies = pd.read_csv('data/movies.csv')
+ratings = pd.read_csv('data/ratings.csv')
 
-users_counts = df['user_id'].nunique()
-movies_counts = df['item_id'].nunique()
-print("m: "+str(users_counts), "& n: "+str(movies_counts))
+movies['title'] = movies['title'].apply(lambda x: ' '.join(x.split(' ')[:-1]))
+# duplicate movie titles
+duplicate_movies = movies.groupby('title').filter(lambda x: len(x) >= 2)
+duplicate_movies = duplicate_movies[['movieId', 'title']]
 
-# initialize the metrices
-train_data, test_data = train_test_split(df, test_size=0.25)
-train_data_matrix = np.zeros((users_counts, movies_counts))
-test_data_matrix = np.zeros((users_counts, movies_counts))
+duplicate_ids = duplicate_movies['movieId'].values.tolist()
 
-for index, row in train_data.iterrows():
-    train_data_matrix[row['user_id']-1, row['item_id']-1] = row['rating']
+# review on duplicate movies
+duplicate_ratings = pd.DataFrame(ratings[ratings['movieId'].isin(duplicate_ids)]['movieId'].value_counts()).reset_index()
+duplicate_ratings.columns = ['movieId', 'count']
 
-for index, row in test_data.iterrows():
-    test_data_matrix[row['user_id']-1, row['item_id']-1] = row['rating']
+duplicated_df = pd.merge(duplicate_movies, duplicate_ratings, on='movieId')
+duplicate_ratings.sort_values(by='count', ascending=False)
+duplicated_df.sort_values(by=['title', 'count'], ascending=[True, False])
 
-# train_data_matrix --> users * items(m*n)
-user_similarity = cosine_similarity(train_data_matrix)
-# train_data_matrix --> items * users(n*m)
-movie_similarity = cosine_similarity(train_data_matrix.T)
+# Removing duplicated ids with low review count
+low_ids = duplicated_df.drop_duplicates(subset='title', keep='last', inplace=False)['movieId']
+movies = movies.loc[~movies['movieId'].isin(low_ids)]
+ratings = ratings.loc[~ratings['movieId'].isin(low_ids)]
 
-
-def predict(ratings, similarity, type1):
-    if type1 == 'user':
-        mean_user_rating = ratings.mean(axis=1)
-        ratings_diff = (ratings - mean_user_rating[:, np.newaxis])
-        pred = mean_user_rating[:, np.newaxis] + similarity.dot(ratings_diff)/np.array([np.abs(similarity).sum(axis=1)]).T
-    elif type1 == 'movie':
-        pred = ratings.dot(similarity)/np.array([np.abs(similarity).sum(axis=1)])
-    return pred
+df = pd.merge(ratings, movies, on='movieId')
+pivot_df = pd.pivot_table(df, index='title', columns=['userId'], values='rating')
+movie = 'Toy Story'
 
 
-user_prediction = predict(train_data_matrix, user_similarity, 'user')
-item_prediction = predict(train_data_matrix, movie_similarity, 'movie')
+# Item based
+def item_based_cf(pivot_df, movie):
+    pivot_df = pivot_df.fillna(0)
+    sparse_pivot = sparse.csr_matrix(pivot_df)
+    recommender = cosine_similarity(sparse_pivot)
+    recommender_df = pd.DataFrame(recommender, columns=pivot_df.index, index=pivot_df.index)
+    # print(recommender_df.index.str.upper().tolist())
+    cosine_df = pd.DataFrame(recommender_df[movie].sort_values(ascending=False))[1:6]
+    cosine_df.reset_index(inplace=True)
+    print(cosine_df['title'].values.tolist())
 
-print(item_prediction)
-print(user_prediction)
+
+item_based_cf(pivot_df, movie)
