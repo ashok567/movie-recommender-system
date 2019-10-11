@@ -4,7 +4,7 @@ from scipy import sparse
 from sklearn.metrics.pairwise import cosine_similarity
 
 user_id = 262
-movie_title = 'abc'
+movie_title = 'Toy Story'
 
 
 def get_cosine_df(pivot_df, subject):
@@ -55,20 +55,21 @@ def user_based_cf(user_id, movie_title):
     return user_movie_df
 
 
-item_movie_list = item_based_cf(user_id, movie_title)
-if len(item_movie_list) > 0:
-    print("Films you might enjoy based that you watched {0}:".format(
-        movie_title))
-    for movie in item_movie_list[:6]:
-        print(movie)
-else:
-    print("Mentioned movie is not our in database")
+if __name__ == '__main__':
+    item_movie_list = item_based_cf(user_id, movie_title)
+    if len(item_movie_list) > 0:
+        print("Films you might enjoy based that you watched {0}:".format(
+            movie_title))
+        for movie in item_movie_list[:6]:
+            print(movie)
+    else:
+        print("Mentioned movie is not our in database")
 
-print("-----------------------------------------------")
-user_movie_list = user_based_cf(user_id, movie_title)
-if len(user_movie_list) > 0:
-    print("Flims reccomended for you:")
-    for movie in user_movie_list[:6]:
-        print(movie)
-else:
-    print("Mentioned user is not our in database")
+    print("-----------------------------------------------")
+    user_movie_list = user_based_cf(user_id, movie_title)
+    if len(user_movie_list) > 0:
+        print("Flims reccomended for you:")
+        for movie in user_movie_list[:6]:
+            print(movie)
+    else:
+        print("Mentioned user is not our in database")

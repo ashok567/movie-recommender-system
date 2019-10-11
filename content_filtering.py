@@ -28,17 +28,18 @@ def content_similarity(movie_name):
         similar_movies = list(enumerate(cosine_sim[movie_index]))
         similar_movies = sorted(
             similar_movies, key=lambda x: x[1], reverse=True)
-        for element in similar_movies[1:50]:
+        for element in similar_movies[1:100]:
             similar_movies_list.append(
                 df[df.index == element[0]]["title"].values[0])
     return similar_movies_list
 
 
-movie_name = input("Enter a movie name\n").upper()
-similar_movies_list = content_similarity(movie_name)
-if len(similar_movies_list) > 0:
-    print("Also, add these movies to your watch list: ")
-    for movie in similar_movies_list[:6]:
-        print(movie)
-else:
-    print("Mentioned movie is not our in database")
+if __name__ == '__main__':
+    movie_name = input("Enter a movie name:\n").upper()
+    similar_movies_list = content_similarity(movie_name)
+    if len(similar_movies_list) > 0:
+        print("Also, add these movies to your watch list: ")
+        for movie in similar_movies_list[:6]:
+            print(movie)
+    else:
+        print("Mentioned movie is not our in database")
