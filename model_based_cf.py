@@ -5,6 +5,7 @@ import preprocessing
 from scipy import sparse
 from scipy.sparse.linalg import svds
 
+movie_title = 'Toy Story'
 df, movies, ratings = preprocessing.data()
 pivot_df = pd.pivot_table(df, index='title', columns=[
                           'userId'], values='rating')
@@ -21,3 +22,8 @@ u, s, vt = svds(sparse_pivot, k=20)
 s_diag = np.diag(s)
 # S(m*n) is a diagonal matrix, Features Matrix U(users-->m*m) & V(movies)(n*n)
 recommender = np.dot(np.dot(u, s_diag), vt)  # X(m*n) = USV.T
+recommender_df = pd.DataFrame(
+        recommender, columns=pivot_df.columns, index=pivot_df.index)
+cosine_df = pd.DataFrame(
+    recommender_df[movie_title].sort_values(ascending=False))
+cosine_df.reset_index(inplace=True)
