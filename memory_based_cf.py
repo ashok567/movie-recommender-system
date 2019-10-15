@@ -43,9 +43,9 @@ def user_based_cf(user_id, movie_title):
     if user_id in ratings['userId'].values.tolist():
         already_watched = df[df['userId'] == user_id]['title'].values.tolist()
         similar_users = get_cosine_df(pivot_df.T, user_id)
-        similar_users_list = similar_users['userId'].values.tolist()[1:11]
-        similar_user_df = pivot_df[similar_users_list].fillna(0)
-        similar_user_df['mean_rating'] = similar_user_df[similar_users_list].mean(
+        users_list = similar_users['userId'].values.tolist()[1:11]
+        similar_user_df = pivot_df[users_list].fillna(0)
+        similar_user_df['mean_rating'] = similar_user_df[users_list].mean(
             numeric_only=True, axis=1)
         similar_user_df = similar_user_df.sort_values(
             'mean_rating', ascending=False)

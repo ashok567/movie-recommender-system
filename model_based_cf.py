@@ -10,7 +10,7 @@ user_id = 2
 # Get all basic data
 df, movies, ratings = preprocessing.data()
 pivot_df = pd.pivot_table(df, index='title', columns=[
-        'userId'], values='rating').T
+    'userId'], values='rating').T
 pivot_df = pivot_df.fillna(0)
 sparse_pivot = sparse.csr_matrix(pivot_df)
 
@@ -34,9 +34,11 @@ already_watched = ratings[ratings['userId'] == user_id]
 unwatched_movies = movies[~movies['movieId'].isin(already_watched['movieId'])]
 
 # top 5 movie recommendation
-recommendation_df = unwatched_movies.merge(pd.DataFrame(sorted_user_preds), how='left', on='title')
+recommendation_df = unwatched_movies.merge(
+    pd.DataFrame(sorted_user_preds), how='left', on='title')
 recommendation_df = recommendation_df.rename(columns={user_id: 'predictions'})
-recommendation_df = recommendation_df.sort_values('predictions', ascending=False)
+recommendation_df = recommendation_df.sort_values(
+    'predictions', ascending=False)
 recommendation_list = recommendation_df['title'].values.tolist()[:5]
 
 print("Flims reccomended for you:")
